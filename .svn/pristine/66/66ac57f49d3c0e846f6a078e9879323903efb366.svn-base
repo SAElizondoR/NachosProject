@@ -1,0 +1,25 @@
+#include "syscall.h"
+
+
+//----------------------------------------------------------------------
+// integ.c
+//      Get an integer from input and put it (if the input is valid).
+//      If the input is not valid, the program prints "Pas un int"
+//      Note: The input length should not be more than CHAR_INT_MAX (10)
+//      We choose this value based on the maximum size possible for 
+//      type int in C
+//----------------------------------------------------------------------
+int main()
+{
+    int n;
+    int tmp = GetInt(&n);
+    if (tmp != 0) {
+        PutInt(n);
+        PutChar('\n');
+    }
+    else {
+        PutString("Pas un int\n");
+    }
+    
+    return 0;
+}

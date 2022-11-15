@@ -1,0 +1,29 @@
+#include "syscall.h"
+
+void
+print (void *arg)
+{
+    char c = (char)(long) arg;
+    PutChar(c);
+    PutChar('\n');
+    ThreadExit();
+}
+
+//----------------------------------------------------------------------
+// MakeThreads
+//      Thread test
+//----------------------------------------------------------------------
+int
+main ()
+{
+    char c = 'a';
+    PutChar(c);
+    PutChar('\n');
+    ThreadCreate(print, (void *)(long)c);
+    PutChar(c);
+    PutChar('\n');
+
+    ThreadExit();
+
+    return 0;
+}

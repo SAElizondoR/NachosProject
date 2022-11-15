@@ -1,0 +1,16 @@
+#include "syscall.h"
+
+int main()
+{
+    int n;
+    int tmp = GetInt(&n);
+    if (tmp != 0) {
+        PutInt(n);
+        PutChar('\n');
+    }
+    else {
+        PutString("Pas un int\n");
+    }
+    
+    return 0;
+}

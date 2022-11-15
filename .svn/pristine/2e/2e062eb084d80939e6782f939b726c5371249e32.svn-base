@@ -1,0 +1,41 @@
+#include "syscall.h"
+
+void
+print (void *arg)
+{
+    char c = (char)(long) arg;
+    // do {
+    //     c = GetChar();
+    // } while (c == '\n');
+    // PutChar(c);
+    // PutString("HELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLOHELLO");
+    // PutChar('\n');
+    PutChar(c);
+    PutChar('\n');
+    ThreadExit();
+}
+
+//----------------------------------------------------------------------
+// MakeThreads
+//      Thread test
+//----------------------------------------------------------------------
+int
+main ()
+{
+    int i;
+    char c = 'a';
+    PutChar(c);
+     PutChar('\n');
+    for (i = 0; i < 2; i++)
+        ThreadCreate(print, (void *)(long)(c + i));
+    // do {
+    //     c = GetChar();
+    // } while (c == '\n');
+    PutChar(c + i);
+    // PutString("hellohellohellohellohellohellohellohellohellohellohellohello");
+    PutChar('\n');
+
+    ThreadExit();
+
+    return 0;
+}

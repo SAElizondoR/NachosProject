@@ -1,0 +1,13 @@
+#include "syscall.h"
+void print(char* c)
+{
+#if 1
+    PutString(c);
+#endif
+}
+
+int main()
+{
+    print("Bonjour");
+    Halt();
+}

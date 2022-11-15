@@ -1,0 +1,149 @@
+#ifdef CHANGED
+
+#include "copyright.h"
+#include "system.h"
+#include "machine.h"
+#include "consoledriver.h"
+#include "synch.h"
+#include "util.h"
+
+
+static Semaphore *readAvail;
+static Semaphore *writeDone;
+static Semaphore *mutex_get; //*mutex_put
+
+static void ReadAvailHandler(void *arg) { (void) arg; readAvail->V(); }
+
+static void WriteDoneHandler(void *arg) { (void) arg; writeDone->V(); }
+
+ConsoleDriver::ConsoleDriver(const char *in, const char *out)
+{
+    readAvail = new Semaphore("read avail", 0);
+    writeDone = new Semaphore("write done", 0);
+    console = new Console(in, out, ReadAvailHandler, WriteDoneHandler, NULL);
+}
+
+ConsoleDriver::~ConsoleDriver()
+{
+    delete console;
+    delete writeDone;
+    delete readAvail;
+}
+
+void ConsoleDriver::PutChar(int ch)
+{
+    console->mutex->P();
+    console->TX (ch);        // echo it
+    writeDone->P();
+    console->mutex->V();
+}
+
+int ConsoleDriver::GetChar()
+{
+    readAvail->P ();        // wait for character to arrive
+    return console->RX ();
+}
+
+unsigned ConsoleDriver::copyStringFromMachine(int from, char *to, unsigned size){
+    int tmp;
+    unsigned int compt = 0;
+
+    while(compt < size - 1){
+        if(machine->ReadMem(from + compt, 1, &tmp)){
+            to[compt] = (char)tmp;
+            compt++;
+        }
+        else
+            break;
+    }
+    
+    to[compt] = '\0';
+    compt++;
+
+    return compt;
+}
+
+unsigned ConsoleDriver::copyStringToMachine(char *from, int to, unsigned size){
+    int tmp;
+    unsigned int compt = 0;
+    while(compt < size - 1 && (tmp = (int)from[compt]) != '\0') {
+        if(machine->WriteMem(to + compt, 1, tmp)){
+            compt++;
+        }
+        else
+            break;
+    }
+    machine->WriteMem(to + compt, 1, '\0');
+    return compt;
+}
+
+unsigned ConsoleDriver::copyIntToMachine(int from, int to){
+    machine->WriteMem(to, 4, from);
+
+    return 0;
+}
+
+void ConsoleDriver::PutString(const char *s)
+{
+    // mutex_put->V();
+    int compteur = 0;
+    while(s[compteur] != '\0'){
+        PutChar(s[compteur]);
+        compteur++;
+    }
+    compteur++;
+    // mutex_put->P();
+}
+
+void ConsoleDriver::GetString(char *s, int n)
+{
+    mutex_get->P();
+    char c;
+    int i = 0;
+    
+    if (n <= 0)
+        return;
+
+    while (i < n - 1 && (c = GetChar()) != -1) {
+        s[i] = c;
+        if (c == '\n')
+            break;
+        i++;
+    }
+    s[i] = '\0';
+    mutex_get->V();
+    return;
+}
+
+void ConsoleDriver::PutInt(int n)
+{
+    char tmp[CHAR_INT_MAX];
+    snprintf(tmp, CHAR_INT_MAX, "%d", n);
+    PutString(tmp);
+}
+
+int ConsoleDriver::GetInt(int *n)
+{
+    char tmp[CHAR_INT_MAX];
+    int i = 0;
+
+    GetString(tmp, CHAR_INT_MAX);
+    
+    while (isspace(tmp[i]))
+        i++;
+    if (tmp[i] == '+' || tmp[i] == '-')
+        i++;
+    if (!isdigit(tmp[i]))
+        return 0;
+    while (i < CHAR_INT_MAX && !isspace(tmp[i]) && tmp[i] != '\0') {
+        if (!isdigit(tmp[i])) {
+            return 0;
+        } 
+        i++;
+    }
+    sscanf(tmp, "%d", n);
+    
+    return 1;
+}
+
+#endif // CHANGED

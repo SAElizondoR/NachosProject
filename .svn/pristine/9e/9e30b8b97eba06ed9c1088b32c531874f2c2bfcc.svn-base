@@ -1,0 +1,10 @@
+#include "syscall.h"
+#include "vsprintf.h"
+
+int main()
+{
+    // prints "2 hello f"
+    printf("%d hello %c\n", 2, 'f');
+
+    return 0;
+}

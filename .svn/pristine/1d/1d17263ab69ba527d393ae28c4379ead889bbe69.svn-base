@@ -1,0 +1,14 @@
+#ifdef CHANGED
+
+// userthread.h
+//      [AJOUTER DESCRIPTION]
+
+static void StartUserThread(void *schmurtz) {
+    
+}
+
+int do_ThreadCreate(int f, int arg) {
+
+}
+
+#endif // CHANGED

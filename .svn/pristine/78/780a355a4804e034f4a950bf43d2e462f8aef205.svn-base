@@ -1,0 +1,11 @@
+int isxdigit (int arg) {
+    return arg >= '0' && arg <= '9' || arg >= 'a' && arg <= 'f' || arg >= 'A' && arg <= 'F';  
+}
+
+int isdigit (int arg) {
+    return arg >= '0' && arg <= '9';
+}
+
+int islower (int arg) {
+    return arg >= 'a' && arg <= 'z'
+}

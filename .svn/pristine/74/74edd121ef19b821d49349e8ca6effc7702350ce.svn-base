@@ -1,0 +1,22 @@
+#include "syscall.h"
+
+//----------------------------------------------------------------------
+// userpages0.c
+//      Write some characters on the screen.
+//----------------------------------------------------------------------
+
+int main()
+{
+    PutChar('q');
+    PutChar('w');
+    PutChar('e');
+    PutChar('r');
+    PutChar('t');
+    PutChar('y');
+    PutChar('u');
+    PutChar('i');
+    PutChar('o');
+    PutChar('\n');
+
+    return 0;
+}

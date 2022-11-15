@@ -1,0 +1,75 @@
+#ifdef CHANGED
+
+// userthread.h
+//      [AJOUTER DESCRIPTION]
+
+#include "machine.h"
+#include "syscall.h"
+#include "system.h"
+
+typedef struct {
+    int f;
+    int arg;
+    unsigned stack;
+} func_arg_t;
+
+static void StartUserThread(void *schmurtz) {
+    func_arg_t *args = (func_arg_t*) schmurtz;
+    int i;
+    for (i = 0; i < NumTotalRegs; i++) {
+        machine->WriteRegister(i, 0);
+    }
+    int f = args->f;
+    int arg = args->arg;
+    unsigned stack = args->stack;
+    DEBUG('x', "arg: %c\n", arg);
+    machine->WriteRegister(4, arg);
+    machine->WriteRegister(PCReg, f);
+    free(schmurtz);
+    DEBUG('x', "Initializing program counter register to 0x%x\n",
+        f);
+    machine->WriteRegister (NextPCReg, machine->ReadRegister(PCReg) + 4);
+    DEBUG('x', "Initializing NextPC register to 0x%x\n",
+        machine->ReadRegister(PCReg) + 4);
+    machine->WriteRegister (StackReg,
+        stack);
+    DEBUG ('x', "Initializing stack register to 0x%x\n",
+           stack);
+
+    machine->DumpMem("threads.svg");
+    machine->Run();
+}
+
+int do_ThreadCreate(int f, int arg) {
+    DEBUG('x', "do_ThreadCreate\n");
+    func_arg_t *schmurtz = (func_arg_t *) malloc(sizeof(func_arg_t));
+    schmurtz->f = f;
+    schmurtz->arg = arg;
+    schmurtz->stack = currentThread->space->AllocateUserStack();
+    if (schmurtz->stack == 0) 
+        return -1;
+    Thread *newThread = new Thread("forked thread");
+    currentThread->space->augmenterThreadCounter();
+    DEBUG('x', "thread counter: %d\n", currentThread->space->threadCounter);
+    newThread->space = currentThread->space;
+    newThread->Start(StartUserThread, schmurtz);
+
+    return 0;
+}
+
+int do_ThreadExit() {
+    DEBUG('x', "do_ThreadExit\n");
+    int stack = machine->ReadRegister(StackReg);
+    currentThread->space->DeAllocateUserStack(stack);
+    currentThread->space->diminuerThreadCounter();
+    DEBUG('x', "thread counter: %d\n", currentThread->space->threadCounter);
+    
+    if (currentThread->space->threadCounter == 0)
+        Exit(0);
+    else
+        currentThread->Finish();
+
+    return 0;
+}
+
+#endif // CHANGED

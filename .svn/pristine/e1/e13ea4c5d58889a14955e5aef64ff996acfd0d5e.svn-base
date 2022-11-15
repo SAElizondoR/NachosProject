@@ -1,0 +1,43 @@
+#ifdef CHANGED
+
+// userthread.h
+//      [AJOUTER DESCRIPTION]
+
+#include "machine.h"
+#include "syscall.h"
+#include "system.h"
+
+typedef struct {
+    int f;
+    int arg;
+} func_arg_t;
+
+static void StartUserThread(void *schmurtz) {
+    int i;
+    int arg = (long) schmurtz;
+
+    for (i = 0; i < NumTotalRegs; i++) {
+        machine->WriteRegister(i, 0);
+    }
+
+    machine->WriteRegister(PCReg, USER_START_ADDRESS);
+    machine->WriteRegister(NextPCReg, machine->ReadRegister(PCReg) + 4);
+    machine->WriteRegister(StackReg, machine->ReadRegister(StackReg) - 256);
+    DEBUG('a', "Initializing stack register to 0x%x\n",
+        machine->ReadRegister(StackReg));
+
+    printf("%d\n",arg);
+
+    machine->Run();
+}
+
+int do_ThreadCreate(int f, int arg) {
+    func_arg_t args = {f, arg};
+    Thread *newThread = new Thread("forked thread");
+    newThread->space = currentThread->space;
+    newThread->Start(StartUserThread, &args);
+
+    return 0;
+}
+
+#endif // CHANGED

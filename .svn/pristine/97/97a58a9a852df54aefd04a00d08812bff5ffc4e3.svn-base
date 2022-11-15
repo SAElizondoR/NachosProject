@@ -1,0 +1,126 @@
+#ifdef CHANGED
+
+#include "copyright.h"
+#include "system.h"
+#include "machine.h"
+#include "consoledriver.h"
+#include "synch.h"
+
+
+static Semaphore *readAvail;
+static Semaphore *writeDone;
+
+static void ReadAvailHandler(void *arg) { (void) arg; readAvail->V(); }
+
+static void WriteDoneHandler(void *arg) { (void) arg; writeDone->V(); }
+
+ConsoleDriver::ConsoleDriver(const char *in, const char *out)
+{
+    readAvail = new Semaphore("read avail", 0);
+    writeDone = new Semaphore("write done", 0);
+    console = new Console(in, out, ReadAvailHandler, WriteDoneHandler, NULL);
+}
+
+ConsoleDriver::~ConsoleDriver()
+{
+    delete console;
+    delete writeDone;
+    delete readAvail;
+}
+
+void ConsoleDriver::PutChar(int ch)
+{
+    if(ch!='\n'){
+          console->TX (ch);        // echo it
+          writeDone->P();  // wait for write to finish
+        }
+        else{
+          console->TX (ch);        // echo it
+          writeDone->P();
+        }
+}
+
+int ConsoleDriver::GetChar()
+{
+    readAvail->P ();        // wait for character to arrive
+    return console->RX ();
+}
+
+unsigned ConsoleDriver::copyStringFromMachine(int from, char *to, unsigned size){
+    int tmp;
+    int compt=0;
+    while(size>0 ){
+        if(machine->ReadMem(from, 1, &tmp)){
+            to[compt]=(char)tmp;
+            size=size-1;
+            compt++;
+        };
+    }
+    printf("to: %s\n" , to);
+    return compt;
+}
+
+void ConsoleDriver::PutString(const char *s)
+{
+    /* int compteur=0;
+    // printf("compteur: %d\n" , compteur);
+    while(s[compteur]!='\0'){
+        compteur++;
+        // printf("s[compteur]: %c\n" , s[compteur]);
+    }
+    compteur++;
+    // printf("compteur: %d\n" , compteur);
+    int i=0;
+    while(i<=compteur){
+        console->TX(s[i]);
+        writeDone->P();
+        i++;
+        // printf("i: %d\n" , i);
+    } */
+
+    int compteur=0;
+    while(s[compteur]!='\0'){
+        printf("s[compteur]: %c\n" , s[compteur]);
+        compteur++;
+    }
+    compteur++;
+    printf("compteur: %d\n" , compteur);
+    int i=0;
+    int chaine[compteur];
+    bool k= true;
+    int test = 0;
+    /* while(i < compteur && k ){
+        k=machine->ReadMem(*s, 1, &test);
+        chaine[i]=test;
+        printf("chaine[i]: %c\n ", chaine[i]);
+        printf("&chaine[i]: %p\n ", &chaine[i]);
+        console->TX(chaine[i]);
+        writeDone->P();
+        i++;
+    } */
+
+}
+
+char* ConsoleDriver::GetString(char *s, int n)
+{
+    char c;
+    int i = 0;
+
+    if (n <= 0)
+        return s;
+
+    while (i < n - 1 && (c = GetChar()) != -1) {
+        s[i++] = c;
+        if (c == '\n')
+            break;
+    }
+
+    s[i] = '\0';
+
+    if (i > 0)
+        return s;
+    
+    return NULL;
+}
+
+#endif // CHANGED

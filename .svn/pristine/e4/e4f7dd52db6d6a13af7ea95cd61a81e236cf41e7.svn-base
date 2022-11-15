@@ -1,0 +1,60 @@
+#ifdef CHANGED
+
+// userthread.h
+//      [AJOUTER DESCRIPTION]
+
+#include "machine.h"
+#include "syscall.h"
+#include "system.h"
+
+typedef struct {
+    int f;
+    int arg;
+} func_arg_t;
+
+static void StartUserThread(void *schmurtz) {
+    int i;
+    func_arg_t *args = (func_arg_t*) schmurtz;
+
+    for (i = 0; i < NumTotalRegs; i++) {
+        machine->WriteRegister(i, 0);
+    }
+    unsigned f = args->f;
+    // machine->ReadMem(f, sizeof(void))
+    int arg = args->arg;
+    machine->WriteRegister(4, arg);
+    machine->WriteRegister(PCReg, f);
+    DEBUG('x', "Initializing program counter register to 0x%x\n",
+        f);
+    machine->WriteRegister (NextPCReg, machine->ReadRegister(PCReg) + 4);
+    DEBUG('x', "Initializing NextPC register to 0x%x\n",
+        machine->ReadRegister(PCReg) + 4);
+    unsigned stack = currentThread->space->AllocateUserStack();
+    machine->WriteRegister (StackReg,
+        stack);
+    DEBUG ('x', "Initializing stack register to 0x%x\n",
+           stack);
+
+    // printf("%d\n",arg);
+
+    machine->Run();
+}
+
+int do_ThreadCreate(int f, int arg) {
+    func_arg_t args = {f, arg};
+    DEBUG('x', "do_ThreadCreate\n");
+    Thread *newThread = new Thread("forked thread");
+    currentThread->space->threadCounter++;
+    newThread->space = currentThread->space;
+    newThread->Start(StartUserThread, &args);
+
+    return 0;
+}
+
+int do_ThreadExit() {
+    currentThread->space->threadCounter--;
+    currentThread->Finish();
+    return 1;
+}
+
+#endif // CHANGED

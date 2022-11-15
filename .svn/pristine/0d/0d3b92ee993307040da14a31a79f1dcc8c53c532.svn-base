@@ -1,0 +1,15 @@
+#include "syscall.h"
+void printstr(char* c)
+{
+#if 1
+    PutString(c);
+#endif
+}
+
+int main()
+{
+    printstr("Bonjour\n");
+    printstr("Mexico, oficialmente los Estados Unidos Mexicanos,​
+    es un país soberano ubicado en la parte meridional de América del Norte;");
+    Halt();
+}

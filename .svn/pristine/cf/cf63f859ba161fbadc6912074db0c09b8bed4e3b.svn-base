@@ -1,0 +1,32 @@
+{
+    "editor.tabSize": 4,
+    "editor.indentSize": 4,
+    "editor.insertSpaces": true,
+    "files.associations": {
+        "syscall.h": "c",
+        "bitset": "cpp",
+        "atomic": "cpp",
+        "array": "cpp",
+        "hash_map": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "deque": "cpp",
+        "iterator": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "set": "cpp",
+        "stack": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "type_traits": "c",
+        "core": "c"
+    }
+}

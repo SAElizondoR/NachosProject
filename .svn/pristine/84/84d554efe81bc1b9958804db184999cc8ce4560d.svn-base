@@ -1,0 +1,14 @@
+#include "syscall.h"
+void printstr(char* c)
+{
+#if 1
+    PutString(c);
+#endif
+}
+
+int main()
+{
+    printstr("Bonjour\n");
+    printstr("This is a long string to see what happens because the buffer is only 16 bytes");
+    return 12;
+}

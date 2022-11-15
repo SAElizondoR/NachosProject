@@ -1,0 +1,29 @@
+#include "syscall.h"
+void scan()
+{
+#if 1
+    for (;;) {
+        char c;
+        c = GetChar();
+        if (c == -1) {
+            PutChar('E');
+            PutChar('x');
+            PutChar('i');
+            PutChar('t');
+            PutChar('\n');
+            break;
+        }
+        if (c == '\n')
+            continue;
+        PutChar(c);
+        PutChar('\n');
+
+    }
+#endif
+}
+
+int main()
+{
+    scan();
+    // Halt();
+}

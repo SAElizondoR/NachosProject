@@ -1,0 +1,189 @@
+#ifdef CHANGED
+
+#include "copyright.h"
+#include "system.h"
+#include "machine.h"
+#include "consoledriver.h"
+#include "synch.h"
+#include "util.h"
+
+
+static Semaphore *readAvail;
+static Semaphore *writeDone;
+
+static void ReadAvailHandler(void *arg) { (void) arg; readAvail->V(); }
+
+static void WriteDoneHandler(void *arg) { (void) arg; writeDone->V(); }
+
+ConsoleDriver::ConsoleDriver(const char *in, const char *out)
+{
+    readAvail = new Semaphore("read avail", 0);
+    writeDone = new Semaphore("write done", 0);
+    console = new Console(in, out, ReadAvailHandler, WriteDoneHandler, NULL);
+}
+
+ConsoleDriver::~ConsoleDriver()
+{
+    delete console;
+    delete writeDone;
+    delete readAvail;
+}
+
+void ConsoleDriver::PutChar(int ch)
+{
+    console->TX (ch);        // echo it
+    writeDone->P();
+}
+
+int ConsoleDriver::GetChar()
+{
+    readAvail->P ();        // wait for character to arrive
+    return console->RX ();
+}
+
+unsigned ConsoleDriver::copyStringFromMachine(int from, char *to, unsigned size){
+    int tmp;
+    unsigned int compt = 0;
+    while(compt < size - 1){
+        if(machine->ReadMem(from + compt, 1, &tmp)){
+            to[compt] = (char)tmp;
+            compt++;
+        }
+        else
+            break;
+    }
+    to[compt] = '\0';
+    compt++;
+    // printf("to: %s\n" , to);
+    return compt;
+}
+
+unsigned ConsoleDriver::copyStringToMachine(char *from, int to, unsigned size){
+    int tmp;
+    unsigned int compt = 0;
+    while(compt < size - 1 && (tmp = (int)from[compt]) != '\0') {
+        if(machine->WriteMem(to + compt, 1, tmp)){
+            compt++;
+        }
+        else
+            break;
+    }
+    machine->WriteMem(to + compt, 1, '\0');
+    return compt;
+}
+
+unsigned ConsoleDriver::copyIntToMachine(int from, int to){
+    machine->WriteMem(to, 4, from);
+
+    return 0;
+}
+
+void ConsoleDriver::PutString(const char *s)
+{
+    /* int compteur = 0;
+    // printf("compteur: %d\n" , compteur);
+    while(s[compteur] != '\0'){
+        compteur++;
+        // printf("s[compteur]: %c\n" , s[compteur]);
+    }
+    compteur++;
+    // printf("compteur: %d\n" , compteur);
+    int i = 0;
+    while(i < compteur){
+        console->TX(s[i]);
+        writeDone->P();
+        i++;
+        // printf("i: %d\n" , i);
+    } */
+
+    int compteur = 0;
+    while(s[compteur] != '\0'){
+        // printf("s[compteur]: %c\n" , s[compteur]);
+        PutChar(s[compteur]);
+        compteur++;
+    }
+    compteur++;
+    /* printf("compteur: %d\n" , compteur);
+    int i = 0;
+    int chaine[compteur];
+    bool k = true;
+    int test = 0;
+    while(i < compteur && k ){
+        k = machine->ReadMem(*s, 1, &test);
+        chaine[i] = test;
+        printf("chaine[i]: %c\n ", chaine[i]);
+        printf("&chaine[i]: %p\n ", &chaine[i]);
+        console->TX(chaine[i]);
+        writeDone->P();
+        i++;
+    } */
+
+}
+
+void ConsoleDriver::GetString(char *s, int n)
+{
+    char c;
+    int i = 0;
+
+    if (n <= 0)
+        return;
+
+    while (i < n - 1 && (c = GetChar()) != -1) {
+        s[i++] = c;
+        if (c == '\n')
+            break;
+    }
+    s[i] = '\0';
+    // printf("%s", s);
+    return;
+}
+
+int isspace(int arg) {
+    return arg == ' ' || arg == '\n' || arg == '\t' || arg == '\v'
+        || arg == '\f' || arg == '\r';
+}
+
+#define CHAR_INT_MAX 11
+
+void ConsoleDriver::PutInt(int n)
+{
+    char tmp[CHAR_INT_MAX];
+    // printf("%d", n);
+    snprintf(tmp, CHAR_INT_MAX - 1, "%d\n", n);
+    PutString(tmp);
+}
+
+int ConsoleDriver::GetInt(int *n)
+{
+    // int tmp_i;
+    char tmp[CHAR_INT_MAX];
+    GetString(tmp, CHAR_INT_MAX);
+
+    int i = 0;
+    while (isspace(tmp[i]))
+        i++;
+    if (tmp[i] == '+' || tmp[i] == '-')
+        i++;
+    while (i < CHAR_INT_MAX && (tmp[i] != '\n' && tmp[i] != '\0')) {
+        if (!isdigit(tmp[i])) {
+            // printf("Arrive %d\n", tmp[i]);
+            // printf("sortir\n");
+            return 0;
+        }
+            
+        i++;
+    }
+    // printf("Arrive \n");
+    /* for (*n = 0; isdigit(c); c = GetChar())
+        *n = 10 * *n + (c - '0');
+    *n *= sign; */
+    
+    sscanf(tmp, "%d\n", n);
+    // *n = tmp_i;
+    // *n = 20;
+    // printf("%ddentro\n", *n);
+    
+    return 1;
+}
+
+#endif // CHANGED

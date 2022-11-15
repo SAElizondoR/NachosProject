@@ -1,0 +1,6 @@
+Supprimer unnecessary code
+--Cette ligne, et les suivantes ci-dessous, seront ignorées--
+
+M    code/test/makethreads.c
+M    code/userprog/exception.cc
+M    code/userprog/userthread.cc
